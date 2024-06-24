@@ -7,12 +7,16 @@
 <ul>
     <li><a href="src/멀티 스레드 모델.md">멀티 스레드 모델</a></li>
     <li><a href="src/chapter1.md">자바의 변화와 함수형 프로그래밍</li>
-<ul>
+</ul>
 
 ## Chapter 02 동작 파라미터화 코드 전달하기
 
 <ul>
     <li><a href="src/chapter2.md">동작의 파라미터화</a></li>    
-<ul>
+</ul>
 
 ## Chapter 03 람다 표현식
+
+<ul>
+    <li><a href="src/chapter3.md">람다 표현식</a></li>
+</ul>
