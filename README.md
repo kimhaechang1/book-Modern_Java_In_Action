@@ -20,3 +20,9 @@
 <ul>
     <li><a href="src/chapter3.md">람다 표현식</a></li>
 </ul>
+
+## Chapter 04 스트림 소개
+
+<ul>
+    <li><a href="src/chapter4.md">스트림 소개</a></li>
+</ul>
