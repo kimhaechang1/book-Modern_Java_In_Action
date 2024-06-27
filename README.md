@@ -26,3 +26,9 @@
 <ul>
     <li><a href="src/chapter4.md">스트림 소개</a></li>
 </ul>
+
+## Chapter 05 스트림 소개
+
+<ul>
+    <li><a href="src/chapter5.md">스트림 활용</a></li>
+</ul>
