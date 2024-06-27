@@ -31,4 +31,5 @@
 
 <ul>
     <li><a href="src/chapter5.md">스트림 활용</a></li>
+    <li><a href="src/루프 퓨전.md">루프 퓨전</a></li>
 </ul>

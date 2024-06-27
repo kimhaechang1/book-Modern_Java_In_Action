@@ -124,6 +124,73 @@ default Stream<E> parallelStream() {
 
 스트림은 생산자와 소비자 관계로서 생산하면 다른 블록에서 소비하고, 마지막에 최종결과에 대한 요청이 있을때만 작동한다.
 
+예를들어 어떤 컬렉션에서 정렬 후 특정 타겟 수치보다 작거나 같은 데이터에서 특정 컬럼(필드)만 추출하고 싶다면
+
+```java
+// no stream
+// 원본 dataList를 훼손시키지 말 것
+List<Data> dataList = Arrays.asList(
+        new Data(10, "number1"),
+        new Data(7, "number2"),
+        new Data(100, "number3"),
+        new Data(302, "number4"),
+        new Data(22, "number5"),
+        new Data(57, "number6"),
+        new Data(16, "number7"),
+        new Data(99, "number8")
+);
+
+List<Data> lowValueList = new ArrayList<>();
+// 중간 처리를 위한 list가 하나 필요함 (메모리 사용)
+
+for(Data data: dataList){
+    if(data.value <= 100){
+        lowValueList.add(data);
+    }
+}
+
+// 정렬
+Collections.sort(lowValueList);
+
+// 최종 결과: nameList
+List<String> result = new ArrayList<>();
+
+for(Data data: lowValueList){
+    result.add(data.name);
+}
+System.out.println(result);
+```
+
+```java
+List<Data> dataList = Arrays.asList(
+        new Data(10, "number1"),
+        new Data(7, "number2"),
+        new Data(100, "number3"),
+        new Data(302, "number4"),
+        new Data(22, "number5"),
+        new Data(57, "number6"),
+        new Data(16, "number7"),
+        new Data(99, "number8")
+);
+
+Stream<Data> origin = dataList.stream();
+Stream<Data> sorted = origin.sorted();
+Stream<Data> sliced = sorted.takeWhile((data) -> data.value <= 100);
+Stream<String> mapped = sliced.map(d -> d.name);
+List<String> r = mapped.toList();
+System.out.println(r);
+
+// 붙여서 작업한다면 사실상
+
+List<String> result = dataList.stream()
+        .sorted()
+        .takeWhile(d -> d.value <= 100)
+        .map(d -> d.name)
+        .toList();
+
+System.out.println(result);
+```
+
 ### 딱 한번만 탐색할 수 있다.
 
 스트림도 반복자와 마찬가지로 단 한번만 탐색할 수 있다.
@@ -197,7 +264,7 @@ mapping: chicken
 
 하지만 `filter`동안에도 이미 `limit`까지 적용된 3개만 추출되어 작동한다.
 
-이를 `쇼트 서킷`이라고 한다. (자세한 이야기는 5장에서)
+마치 `쇼트 서킷`의 효과를 보는듯 한데, 이는 작동 도중에 `limit`의 인자 값만큼만 순차 스트림을 실행하고 중단하기 때문이다.
 
 또한 `filter`와 `map`는 서로다른 연산이지만 한 과정으로 병합되었다.
 
