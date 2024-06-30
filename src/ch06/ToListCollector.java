@@ -1,4 +1,4 @@
-package com.khc.practice.modernjava.ch06;
+package modernjavainaction.ch06;
 
 import java.util.*;
 import java.util.function.BiConsumer;

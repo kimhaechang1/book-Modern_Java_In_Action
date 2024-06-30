@@ -1,4 +1,4 @@
-package com.khc.practice.modernjava.ch06;
+package modernjavainaction.ch06;
 
 public class Dish {
     private final String name;

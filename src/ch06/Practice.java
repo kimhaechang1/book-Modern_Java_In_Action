@@ -1,4 +1,4 @@
-package com.khc.practice.modernjava.ch06;
+package modernjavainaction.ch06;
 
 import static java.util.stream.Collectors.*;
 import java.util.*;
@@ -176,6 +176,18 @@ public class Practice {
                         filtering(dish -> dish.getCalories() > 500, new ToListCollector<>())
                 ));
         System.out.println(customListCollector);
+
+        // 커스텀 컬렉터와 이전까지의 partitionedBy 의 성능 비교
+
+        long fastest = Long.MAX_VALUE;
+        for(int i = 0;i<10;i++){
+            long start = System.nanoTime();
+//            partitionedPrime(1_000_000);
+            partitionedPrimeByEnhanced(1_000_000);
+            long duration = (System.nanoTime() - start) / 1_000_000;
+            if(duration < fastest) fastest = duration;
+        }
+        System.out.println("result: "+fastest);
     }
 
     public static Map<Boolean, List<Integer>> partitionedPrime(int n){
@@ -183,11 +195,25 @@ public class Practice {
                 .collect(partitioningBy(x -> isPrime(x)));
     }
 
+    public static Map<Boolean, List<Integer>> partitionedPrimeByEnhanced(int n){
+        return IntStream.rangeClosed(2, n).boxed()
+                .collect(new PrimeNumbersCollector());
+    }
+
     static boolean isPrime(int number){
         int candidate = (int) Math.sqrt((double) number);
         return IntStream.rangeClosed(2, candidate) // 2 ~ 해당숫자를 포함하는데 double -> int로 바뀌면서 포함 시켜야한다.
                 .noneMatch(i -> number % i == 0);
     }
+
+    public static boolean enhancedIsPrime(List<Integer> primes, int number){
+        int candidate = (int) Math.sqrt((double) number);
+        return primes.stream()
+                .takeWhile(x -> x <= candidate)
+                .noneMatch(i -> candidate % i == 0);
+    }
+
+
 
     public enum CaloricLevel{
         DIET, NORMAL, FAT
