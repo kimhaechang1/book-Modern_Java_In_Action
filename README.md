@@ -33,3 +33,19 @@
     <li><a href="docs/chapter5.md">스트림 활용</a></li>
     <li><a href="docs/루프 퓨전.md">루프 퓨전</a></li>
 </ul>
+
+## Chapter 06 스트림으로 데이터 수집
+
+<ul>
+    <li><a href="docs/chapter6.md">스트림으로 데이터 수집</a></li>
+</ul>
+
+
+## JVM & GC
+
+<ul>
+    <li><a href="docs/JVM.md">JVM</a></li>
+    <li><a href="docs/GC.md">GC</a></li>
+</ul>
+
+
