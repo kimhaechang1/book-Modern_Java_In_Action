@@ -4,7 +4,7 @@
 
 물론 `reduce` 메소드와 동일하게 초기값이 없는 버전도 가능하며
 
-초기값이 없는 버전을 사용한 경우, 스트림 내부가 비었을수도 있기 때문에 `Optional`이 붙게 된다. 
+초기값이 없는 버전을 사용한 경우, 스트림 내부가 비었을수도 있기 때문에 `Optional`이 붙게 된다.
 
 다음은 하나의 인수를 가지는 `reduce`로서 최대값을 찾는 과정이다.
 
@@ -18,7 +18,7 @@ Optional<Integer> max = numberList.stream().collect(reducing((a, b) -> b - a));
 
 ### collect와 reduce
 
-사실 메소드 스펙상으로 어떤 연산을 `collect`와  `reduce`로 둘다 구현이 가능하다.
+사실 메소드 스펙상으로 어떤 연산을 `collect`와 `reduce`로 둘다 구현이 가능하다.
 
 하지만 실용적인 측면에서와 의미론적인 문제에서 두 기능은 차이가 있다.
 
@@ -44,7 +44,7 @@ Map<Boolean, List<Dish>> partitionedMenu = menu.stream()
 System.out.println(partitionedMenu);
 ```
 
-## Collector 인터페이스 
+## Collector 인터페이스
 
 `Collector` 인터페이스는 리듀싱 연산을 어떻게 구현할지 제공하는 메서드 집합으로 구성된다.
 
@@ -94,6 +94,7 @@ public BiConsumer<List<T>, T> accumulator(){
 ```
 
 위의 코드는 메소드 참조가 가능하므로
+
 ```java
 public BiConsumer<List<T>, T> accumulator(){
     return List::add;
@@ -133,7 +134,7 @@ CONCURRENT: 다중 스레드에서 `accumulator`함수를 동시에 호출할 �
 
 IDENTITY-FINISH: `finisher` 메서드가 반환하는 함수는 단순히 `identity`를 적용할 뿐 이므로 이를 생략 할 수 있다. 즉, 리듀싱 과정의 최종 결과로 누적자 객체를 바로 사용이 가능하단 의미
 
-### Collector 인터페이스 응용: 커스텀 Collector만들기 
+### Collector 인터페이스 응용: 커스텀 Collector만들기
 
 위의 `Collector`를 구현하여 스트림 내에 요소들을 모아서 하나의 List로 수집하여 주는 `ToListCollector`를 하나 만들어본다.
 
@@ -174,6 +175,7 @@ public class ToListCollector<T> implements Collector<T, List<T>, List<T>> {
     }
 }
 ```
+
 ```java
 // 커스텀 컬렉션 ToListCollector 사용해보기: toList() 메소드 대신해서 쓸 수 있다.
 Stream<Dish> menuStream = menu.stream();
@@ -188,7 +190,7 @@ Map<Dish.Type, List<Dish>> customListCollector = menu.stream()
 System.out.println(customListCollector);
 ```
 
-### 커스텀 컬렉터를 구현해서 성능 개선하기
+## 커스텀 컬렉터를 구현해서 성능 개선하기
 
 이전에 소수와 비소수를 나누는 것에 대해서 `partitioningBy`와 `collect`를 사용하였다.
 
@@ -216,3 +218,92 @@ static boolean isPrime(int number){
 즉, 중간 결과가 아닌 끝까지 돌고나서 필터링 거친 결과를 얻는것으로 효율이 안좋다.
 
 어짜피 구한 소수는 정렬된 상태일 것이므로, `takeWhile`을 사용하는것도 좋아보인다.
+
+### isPrime 최적화
+
+`isPrime`에서 커스텀 컬렉터로 부터 지금까지 구한 소수 리스트를 받을 것 이므로
+
+내가 찾고자 하는 숫자의 제곱근보다 작은 소수들로 구성하여서, 해당 소수들로만 검사한다.
+
+```java
+static boolean enhancedIsPrime(List<Integer> primes, int number){
+    int candidate = (int) Math.sqrt((double) number);
+    return primes.stream()
+            .takeWhile(x -> x <= candidate)
+            .noneMatch(i -> candidate % i == 0);
+}
+```
+
+### 커스텀 컬렉터 시그니처 정의
+
+정의하려 하는 커스텀 컬렉터는, 소수이냐 아니냐로 기준을 잡는 `Map`이고
+
+각 `key`마다는 소수 리스트와 비소수 리스트를 갖고 있어야 한다.
+
+따라서 누적자의 타입은 `Map<Boolean, List<Integer>>` 이 된다.
+
+다음으로 수집 연산의 결과는, 따로 다르게 자료구조를 바꿀 필요가 없기에 그대로 간다.
+
+결과론적으로 `Collector<T, A, R>`은 다음과 같이 정의된다.
+
+```java
+public class PrimeNumbersCollector implements Collector<Integer, Map<Boolean, List<Integer>>, Map<Boolean, List<Integer>>> {
+    // ...
+}
+```
+
+### 메소드 구현
+
+```java
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
+
+import static modernjavainaction.ch06.Practice.enhancedIsPrime;
+
+public class PrimeNumbersCollector implements Collector<Integer, Map<Boolean, List<Integer>>, Map<Boolean, List<Integer>>> {
+
+    @Override
+    public Supplier<Map<Boolean, List<Integer>>> supplier() {
+        // 누적자 초기화 부분
+        return () ->
+            new HashMap<Boolean, List<Integer>>(){{
+                put(true, new ArrayList<Integer>());
+                put(false, new ArrayList<Integer>());
+            }};
+    }
+
+    @Override
+    public BiConsumer<Map<Boolean, List<Integer>>, Integer> accumulator() {
+        // 누적 연산정의
+        return (Map<Boolean, List<Integer>> acc, Integer present) -> {
+            acc.get(enhancedIsPrime(acc.get(true), present)).add(present);
+            // 검사결과에 따른 분류를 진행
+        };
+    }
+
+    @Override
+    public BinaryOperator<Map<Boolean, List<Integer>>> combiner() {
+        return (Map<Boolean, List<Integer>> map1, Map<Boolean, List<Integer>> map2) -> {
+            map1.get(true).addAll(map2.get(true));
+            map1.get(false).addAll(map2.get(false));
+            return map1;
+        };
+    }
+
+    @Override
+    public Function<Map<Boolean, List<Integer>>, Map<Boolean, List<Integer>>> finisher() {
+        // 항등함수이므로
+        return Function.identity();
+    }
+
+    @Override
+    public Set<Characteristics> characteristics() {
+        // 순서가 존재하며, 굳이 병렬연산을 지원하지 않을 예정이므로
+        return Collections.unmodifiableSet(EnumSet.of(Characteristics.IDENTITY_FINISH));
+    }
+}
+```
