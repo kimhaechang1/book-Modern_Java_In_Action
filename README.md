@@ -40,12 +40,10 @@
     <li><a href="docs/chapter6.md">스트림으로 데이터 수집</a></li>
 </ul>
 
-
 ## JVM & GC
 
 <ul>
     <li><a href="docs/JVM.md">JVM</a></li>
+    <li><a href="docs/String.md"> String Constant</a></li>
     <li><a href="docs/GC.md">GC</a></li>
 </ul>
-
-
