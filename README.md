@@ -47,3 +47,9 @@
     <li><a href="docs/String.md"> String Constant</a></li>
     <li><a href="docs/GC.md">GC</a></li>
 </ul>
+
+## Chapter 07 병렬 데이터 처리와 성능
+
+<ul>
+    <li><a href="docs/chapter7.md">병렬 데이터 처리와 성능</a></li>
+</ul>
