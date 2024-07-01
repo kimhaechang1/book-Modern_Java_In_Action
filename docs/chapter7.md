@@ -99,20 +99,9 @@ public class Practice {
 
 ### 병렬 스트림 사용시 주의 할 점
 
-양을 기준으로 병렬 스트림 사용여부를 결정하는것은 적절치ㅓ 않다.
+양을 기준으로 병렬 스트림 사용여부를 결정하는것은 적절치 않다.
 
 그래서 아래와 같은 사항들을 고려해보자.
-
-iterate()는 내부적으로 분할 하기 어려운 Spliterator를 생성한다.
-
-```
-Benchmark               Mode  Cnt   Score   Error  Units
-Main.iterativeSum       avgt   20   3.298 ± 0.045  ms/op
-Main.parallelStream     avgt   20  71.924 ± 3.033  ms/op
-Main.rangedParallelSum  avgt   20   0.481 ± 0.028  ms/op
-Main.rangedSum          avgt   20   4.305 ± 1.280  ms/op
-Main.sequentialSum      avgt   20  68.674 ± 1.332  ms/op
-```
 
 ### 순차 스트림보다 병렬 스트림에서 성능이 떨어지는 연산을 주의하자
 
