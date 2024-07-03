@@ -53,3 +53,10 @@
 <ul>
     <li><a href="docs/chapter7.md">병렬 데이터 처리와 성능</a></li>
 </ul>
+
+## Chapter 08 컬렉션 API 개선
+
+<ul>
+    <li><a href="docs/fail-safe&fail-fast.md">Fail-Fast & Fail-Safe</a></li>
+    <li><a href="docs/concurrenthashmap.md">ConcurrentHashMap</a></li>
+</ul>
