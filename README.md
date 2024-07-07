@@ -60,3 +60,9 @@
     <li><a href="docs/fail-safe&fail-fast.md">Fail-Fast & Fail-Safe</a></li>
     <li><a href="docs/concurrenthashmap.md">ConcurrentHashMap</a></li>
 </ul>
+
+## Chapter 09 리팩터링, 테스팅, 디버깅
+
+<ul>
+    <li><a href="docs/리팩터링.md">리펙터링</a></li>
+</ul>
