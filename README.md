@@ -78,3 +78,9 @@
 <ul>
     <li><a href="docs/chapter11.md">null 대신 Optional 클래스</a></li>
 </ul>
+
+## Chapter 12 `LocalDate`, `LocalTime`, `Instant`, `Duration`, `Period` 클래스
+
+<ul>
+    <li><a href="src/ch12/Practice.java">Example 확인</a></li>
+</ul>
