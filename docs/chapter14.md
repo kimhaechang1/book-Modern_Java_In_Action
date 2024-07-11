@@ -98,3 +98,21 @@ adding: com/example/expenses/application/ExpensesApplication.class(in = 477) (ou
 ```
 java -jar expenses-application.jar
 ```
+
+### Maven과 함께 사용하기
+
+`module-info.java` 는 모듈간에 내보낼 패키지와 필요한 모듈을 정리해놓는 것
+
+여기서 `Maven`과 `Gradle`등의 빌드도구를 통해 각각의 독립적인 모듈들을 통합적으로 컴파일할 수 있다.
+
+`Maven`을 기준으로 `POM.xml`이란 파일이 있는데, 이곳에 현재 모듈에 대한 기본 패키지 구조와 버전을 명시하고, 부모 모듈을 선정할 수 있다.
+
+`POM.xml`에 의존성을 추가해놓고 `module-info.java`에 `required`를 하지 않는다면, 코드레벨에서 접근이 안된다.
+
+이와는 반대로 `POM.xml`에 의존성을 추가하지 않은체로 `module-info.java`에 `required`를 한다면, `module not found` 에러가 발생한다.
+
+마지막으로 패키지의 주인인 모듈이 해당 패키지를 `exports` 하지 않는다면, `required`를 해도 의미가 없고, `POM.xml`를 해도 의미가 없다.
+
+### 자동 모듈
+
+자바 모듈로 만들어 놓지 않은 즉, `module-info.java `가 따로없는 모듈이더라도 자신의 모든 패키지를 노출시킴으로서 자바 모듈이 되어 `required`와 `dependency` 추가가 가능해진다.
