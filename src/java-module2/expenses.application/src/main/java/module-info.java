@@ -1,3 +1,3 @@
 module expenses.application {
-    requires expenses.readers;
+    // requires expenses.readers;
 }
