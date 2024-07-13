@@ -102,3 +102,9 @@
 <ul>
     <li><a href="docs/chapter15.md">CompletableFuture와 리액티브 프로그래밍 컨셉의 기초</a></li>
 </ul>
+
+## Chapter 16 `CompletableFuture`: 안정적 비동기 프로그래밍
+
+<ul>
+    <li><a href="docs/chapter16.md">CompletableFuture: 안정적 비동기 프로그래밍</a></li>
+</ul>
