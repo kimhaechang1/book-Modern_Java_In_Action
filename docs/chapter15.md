@@ -85,7 +85,27 @@ public class Practice {
     }
 }
 ```
+### 스레드풀이 나쁠때가 있는 이유
 
+k개의 스레드를 가진 스레드 풀은 오직 k만큼의 스레드를 동시에 실행할 수 있다.
+
+초과로 제출된 테스크는 큐에 저장되며 이전에 태스크 중 하나가 종료되기 전까지는 스레드에 할당되지 않는다.
+
+불필요하게 많은 스레드를 만들어 자바 어플리케이션이 크래시 날 일은 피할 수 있기에 보통은 이 스레드풀이 긍정적이지만
+
+`잠을 자거나` `I/O`를 기다리거나 `네트워크 연결`을 기다리는 태스크가 있다면 주의해야 한다.
+
+블록상황에서는 워커 스레드에 할당된 상태를 유지한체로 아무 작업도 하지않게 된다.
+
+```
+예를들어서 네개의 하드웨어 스레드와 5개의 스레드를 갖는 스레드 풀에 20개의 테스크를 제출했다고 가정하자.
+
+그런데 처음 제출한 태스크가 잠을 자거나 I/O를 기다린다고 가정하자.
+
+그러면 남은 2개의 스레드가 15개의 테스크를 실행하게 되므로, 효율이 급격하게 떨어진다.
+
+그래서 블록이 일어날 수 있는 태스크는 스레드풀에 제출하지 말아야하지만, 언제나 지켜지지 않는다.
+```
 
 ### Java 데드락
 
@@ -240,6 +260,252 @@ finalTask를 실행시키기 전 준비상태를 위해서 3개의 `Future`에 �
 
 이를 가능케 하는 `Future`인터페이스의 구현체가 `CompletableFuture`이다.
 
+위를 구현하면 다음과 같다.
+
+```java
+public Future<Integer> doAsync(int x) throws ExecutionException, InterruptedException {
+
+    CompletableFuture<Integer> task1 = CompletableFuture.supplyAsync(() -> {
+        System.out.println("task1 thread: "+Thread.currentThread().getName());
+        return f(x);
+    });
+    CompletableFuture<Integer> task2 = CompletableFuture.supplyAsync(() -> {
+        System.out.println("task2 thread: "+Thread.currentThread().getName());
+        return g(x);
+    });
+    CompletableFuture<Integer> task3 = CompletableFuture.supplyAsync(() -> {
+        System.out.println("task3 thread: "+Thread.currentThread().getName());
+        return h(x);
+    });
+
+    CompletableFuture<Integer> result =
+            task1.thenCombine(task2, (t1, t2) -> t1 + t2)
+            .thenCombine(task3, (sum, t3) -> sum + t3)
+            .thenCompose(sum -> CompletableFuture.completedFuture(sum));
+    /**
+     * 위의 코드는 thenCombine으로서 서로 독립적으로 작동하고
+     * 아래의 주석친 코드는 thenCompose로서 앞선 결과를 기다리고 다음 비동기 함수를 호출한다.
+     * 꼭 비교해서 쓰레드가 어떻게 작동하는지 실행해보자
+     */
+
+    /*CompletableFuture<Integer> result = CompletableFuture.supplyAsync(() -> {
+                System.out.println("task1 thread: "+Thread.currentThread().getName());
+                return f(x);
+            })
+            .thenCompose(t1 -> CompletableFuture.supplyAsync(() -> {
+                System.out.println("task2 thread: "+Thread.currentThread().getName());
+                return t1 + g(x);
+            }))
+            .thenCompose(t2 -> CompletableFuture.supplyAsync(() -> {
+                System.out.println("task3 thread: "+Thread.currentThread().getName());
+                return t2 + h(x);
+            }));
+        */
+
+
+    return result;
+}
+
 ```
-\
+
+## 발행-구독 그리고 리액티브 프로그래밍
+
+자바 9에서 `java.util.concurrent.Flow`의 인터페이스 발행-구독 모델을 적용해 리액티브 프로그래밍을 제공한다.
+
+- 구독자가 구독할 수 있는 발행자.
+- 이 연결을 `subscription`이라고 한다.
+- 이 연결을 이용해 메시지(또는 이벤트)를 전송한다.
+
+크게 `Publisher<T>`와 `Subscriber<T>`의 역할로 나뉜다.
+
+다음은 셀의 예제로서, 하나의 셀은 누군가를 구독자로 받아들이고 발행할 수 있고(`Publisher`), 구독자(`Subscriber`)로서 어떤 발행자를 구독할 수 있다.
+
+그래서 `SimpleCell`은 두가지 인터페이스를 모두 구현하게 된다
+
+```java
+public class SimpleCell implements Flow.Publisher<Integer>, Flow.Subscriber<Integer> {
+
+    private int value = 0;
+    private String name;
+    private List<Flow.Subscriber> subscribers = new ArrayList<>(); // 구독자 관리체계
+    public SimpleCell(String name){
+        this.name = name;
+    }
+
+    @Override
+    public void subscribe(Flow.Subscriber<? super Integer> subscriber) {
+        subscribers.add(subscriber);
+        // 구독자가 해당 셀에 구독을 하게되면 구독자를 받는 발행자는 구독자를 추가한다.
+    }
+
+    @Override
+    public void onSubscribe(Flow.Subscription subscription) {
+
+    }
+
+    private void notifyAllSubscribers(){
+        // 구독자들에게 발행자가 갖고있는 값으로 갱신시킴
+        subscribers.forEach(sub -> sub.onNext(this.value));
+    }
+
+    @Override
+    public void onNext(Integer item) {
+        // 구독한 셀에 새 값이 생겼을 때 값을 갱신해서 반응함.
+        this.value = item;
+        System.out.println(this.name + ":"+this.value);
+        notifyAllSubscribers();
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
+
+    }
+
+    @Override
+    public void onComplete() {
+
+    }
+}
 ```
+```java
+public static void main(String[] args) {
+    simplePubSub();
+}
+public static void simplePubSub(){
+    SimpleCell c3 = new SimpleCell("C3");
+    SimpleCell c2 = new SimpleCell("C2");
+    SimpleCell c1 = new SimpleCell("C1");
+
+    // c3가 c1을 구독
+    c1.subscribe(c3);
+    c1.onNext(10); // c1 발행자를 c3가 구독하고 있기에 notify되어 c3도 onNext이벤트가 전파되었다.
+    c2.onNext(20);
+}
+```
+
+그리고 `Consumer`를 활용해서, `Subscriber`인터페이스의 `onNext`이벤트 동작을 넘겨받고
+
+해당 `onNext`를 수행하는 새로운 구독자를 만들어서 구독시키도록 `subscribe`메소드를 오버로딩 할 수 있다.
+
+즉, 또다른 구독자 객체가 아닌 특정 이벤트가 트리거인 구독자를 만들어내는 셈이다.
+
+```java
+public class ArithmeticCell extends SimpleCell{
+    // 하나의 값이라도 받으면 반대쪽과 덧셈을 수행하는 이벤트를 발생시킨다.
+    private int left;
+    private int right;
+    public ArithmeticCell(String name) {
+        super(name);
+    }
+
+    public void setLeft(int left){
+        this.left = left;
+        onNext(left + this.right);
+    }
+
+    public void setRight(int right){
+        this.right = right;
+        onNext(right + this.left);
+    }
+}
+```
+```java
+public class SimpleCell implements Flow.Publisher<Integer>, Flow.Subscriber<Integer> {
+
+    private int value = 0;
+    private String name;
+    private List<Flow.Subscriber<? super Integer>> subscribers = new ArrayList<>();
+    public SimpleCell(String name){
+        this.name = name;
+    }
+
+    @Override
+    public void subscribe(Flow.Subscriber<? super Integer> subscriber) {
+        subscribers.add(subscriber);
+    }
+
+    public void subscribe(Consumer<? super Integer> onNext) {
+        // 특정 이벤트의 함수 정의를 인자로 받아서, 해당 이벤트를 처리하는 구독자 객체를 만들고 발행자를 구독
+        // 즉, onNext이벤트에 반응하는 구독자를 만들어서 구독하게 만드는 함수
+        subscribers.add(new Flow.Subscriber<>() {
+
+            @Override
+            public void onSubscribe(Flow.Subscription subscription) {
+
+            }
+
+            @Override
+            public void onNext(Integer item) {
+                onNext.accept(item);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+}
+```
+```java
+public static void arithmaticPubSub(){
+    ArithmeticCell p1 = new ArithmeticCell("ALU1");
+    ArithmeticCell p2 = new ArithmeticCell("ALU2");
+
+    SimpleCell c3 = new SimpleCell("C3");
+    SimpleCell c2 = new SimpleCell("C2");
+    SimpleCell c1 = new SimpleCell("C1");
+    c1.subscribe(x -> p1.setLeft(x));
+    // c1의 onNext이벤트 전파때 ArithmeticCell의 setLeft를 호출하도록 동작하는 구독자를 구독시킴
+    c2.subscribe(x -> p1.setRight(x));
+    // c2의 onNext이벤트 전파때 ArithmeticCell의 setLeft를 호출하도록 동작하는 구독자를 구독시킴
+    p1.subscribe(x -> p2.setLeft(x));
+    // p1의 onNext이벤트 전파때 ArithmeticCell p2의 setLeft를 호출하도록 동작하는 구독자를 구독시킴
+    // p1의 subscribe는 SimpleCell 클래스의 subscribe를 호출하게 되고, 최상위 c1이나 c2에 변화가 결국 p1을 거쳐 p2에게 닿게됨
+    c3.subscribe(x -> p2.setRight(x));
+    // c3의 onNext이벤트 전파때 ArithmeticCell p2의 setRight를 호출하도록 동작하는 구독자를 구독시킴
+
+    c1.onNext(10);
+    c2.onNext(20);
+    c1.onNext(15);
+    c3.onNext(1);
+    c3.onNext(3);
+}
+```
+
+### 역압력
+
+기존의 방식들은 모두 `Publisher`가 `Subscriber`에게 전달하는 `압력`이었다면
+
+`압력`의 반대로 발행자가 무한히 쏟아내는 상황에서, 구독자가 원할때만 데이터를 받을 때에는 `역압력`을 통해 `request`를 하게 된다.
+
+구독이 발생할 때 작동하는 이벤트인 `onSubscribe(Subscription subscription)` 이 있다.
+
+```java
+interface Subscription{
+    void cancle();
+    void request(long n);
+}
+```
+위 인터페이스속 메소드를 구현한 인스턴스를 `Subscriber`인터페이스의 `onSubscribe()`메소드를 통해 전달하고
+
+요청을 보낸 채널에만 `onNext()`와 `onError()`를 보내도록 `notifyAllSubscribers` 코드를 바꿔야 한다.
+
+### 리액티브 시스템 vs 리액티브 프로그래밍
+
+`리액티브 시스템`은 런타임 환경이 변화에 대응하도록 전체 아키텍쳐가 설계된 프로그램을 가리킨다.
+
+리액티브 시스템은 `반응형`, `회복성`, `탄력성`의 특징을 가진다.
+
+- 반응성: 리액티브 시스템이 큰 작업을 처리하느라 간단한 질의의 응답을 지연하지 않고 실시간으로 입력에 반응하는 것을 의미
+
+- 회복성: 한 컴포넌트의 실패로 전체 시스템이 실패해야 하지 않음을 의미
+
+- 탄력성: 네트워크가 고장났어도 이와 관계가 없는 질의에는 아무 영향이 없어야 하며, 반응이 없는 컴포넌트에 대한 질의가 있다면 다른 대안 컴포넌트를 찾아야 함을 의미
+
+이들을 구현하는데 있어서 자바에서는 `java.lang.concurrent.Flow`의 `리액티브 프로그래밍` 형식을 활용하는것이 하나의 방법이다.
