@@ -130,5 +130,5 @@
 ### Chapter 18 함수형 관점으로 생각하기
 
 <ul>
-    <li><a href="docs/chapter17.md">리액티브 프로그래밍</a></li>
+    <li><a href="docs/chapter18.md">함수형 관점으로 생각하기</a></li>
 </ul>
