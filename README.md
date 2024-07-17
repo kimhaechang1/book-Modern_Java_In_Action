@@ -132,3 +132,9 @@
 <ul>
     <li><a href="docs/chapter18.md">함수형 관점으로 생각하기</a></li>
 </ul>
+
+### Chapter 19 함수형 프로그래밍 기법
+
+<ul>
+    <li><a href="docs/chapter19.md">함수형 프로그래밍 기법</a></li>
+</ul>
