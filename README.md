@@ -138,3 +138,9 @@
 <ul>
     <li><a href="docs/chapter19.md">함수형 프로그래밍 기법</a></li>
 </ul>
+
+### Chapter 20 결론 그리고 자바의 미래
+
+<ul>
+    <li><a href="docs/chapter21.md">결론 그리고 자바의 미래</a></li>
+</ul>
