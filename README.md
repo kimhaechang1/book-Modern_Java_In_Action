@@ -144,3 +144,9 @@
 <ul>
     <li><a href="docs/chapter21.md">결론 그리고 자바의 미래</a></li>
 </ul>
+
+### Appendix 기타 언어 업데이트
+
+<ul>
+    <li><a href="docs/Appendix.md">부록에 있는 흥미로운 내용들</a></li>
+</ul>
