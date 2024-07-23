@@ -1,4 +1,4 @@
-# book-Modern_Java_In_Action
+# Modern_Java_In_Action
 
 `모던 자바 인 액션`을 읽고 궁금한 및 책 내용 정리
 
